@@ -98,4 +98,16 @@ gboolean ostree_sysroot_upgrader_deploy (OstreeSysrootUpgrader  *self,
                                          GCancellable           *cancellable,
                                          GError                **error);
 
+gboolean ostree_sysroot_upgrader_deploy_tree (OstreeSysrootUpgrader  *self,
+                                              OstreeDeployment      **out_new_deployment,
+                                              GCancellable           *cancellable,
+                                              GError                **error);
+
+gboolean ostree_sysroot_upgrader_simple_write_deployment (OstreeSysrootUpgrader  *self,
+                                                          OstreeDeployment       *new_deployment,
+                                                          OstreeSysrootSimpleWriteDeploymentFlags flags,
+                                                          GCancellable           *cancellable,
+                                                          GError                **error);
+
+
 G_END_DECLS

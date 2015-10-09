@@ -564,27 +564,77 @@ ostree_sysroot_upgrader_deploy (OstreeSysrootUpgrader  *self,
 {
   gboolean ret = FALSE;
   glnx_unref_object OstreeDeployment *new_deployment = NULL;
-
-  if (!ostree_sysroot_deploy_tree (self->sysroot, self->osname,
-                                   self->new_revision,
-                                   self->origin,
-                                   self->merge_deployment,
-                                   NULL,
-                                   &new_deployment,
-                                   cancellable, error))
+  
+  if (!ostree_sysroot_upgrader_deploy_tree(self, &new_deployment, cancellable, error))
     goto out;
-
-  if (!ostree_sysroot_simple_write_deployment (self->sysroot, self->osname,
-                                               new_deployment,
-                                               self->merge_deployment,
-                                               0,
-                                               cancellable, error))
+  
+  if (!ostree_sysroot_upgrader_simple_write_deployment(self,
+                                                       new_deployment,
+                                                       0,
+                                                       cancellable, error))
     goto out;
 
   ret = TRUE;
  out:
   return ret;
 }
+
+/**
+ * ostree_sysroot_upgrader_deploy_tree:
+ * @self: Self
+ * @out_new_deployment: (out): The new deployment
+ * @cancellable: Cancellable
+ * @error: Error
+ *
+ * Write the new deployment to disk, perform a configuration merge
+ * with /etc.
+ */
+gboolean
+ostree_sysroot_upgrader_deploy_tree (OstreeSysrootUpgrader *self, 
+                                     OstreeDeployment     **out_new_deployment, 
+                                     GCancellable          *cancellable, 
+                                     GError               **error)
+{
+  return ostree_sysroot_deploy_tree(self->sysroot, self->osname,
+                                    self->new_revision,
+                                    self->origin,
+                                    self->merge_deployment,
+                                    NULL,
+                                    &out_new_deployment,
+                                    cancellable, error);
+}
+
+/**
+ * ostree_sysroot_upgrader_simple_write_deployment:
+ * @self: Self
+ * @new_deployment: Prepend this deployment to the list
+ * @flags: Flags controlling behavior
+ * @cancellable: Cancellable
+ * @error: Error
+ * 
+ * Prepend @new_deployment to the list of deployments, commit, and
+ * cleanup.  By default, all other deployments with the same osname
+ * except the merge deployment and the booted deployment will be
+ * garbage collected.
+ *
+ * If %OSTREE_SYSROOT_SIMPLE_WRITE_DEPLOYMENT_FLAGS_RETAIN is
+ * specified, then all current deployments will be kept.
+ * 
+ */
+gboolean 
+ostree_sysroot_upgrader_simple_write_deployment (OstreeSysrootUpgrader* self,
+                                                 OstreeDeployment* new_deployment, 
+                                                 OstreeSysrootSimpleWriteDeploymentFlags flags, 
+                                                 GCancellable* cancellable, 
+                                                 GError** error)
+{
+  return ostree_sysroot_simple_write_deployment (self->sysroot, self->osname,
+                                                 new_deployment,
+                                                 self->merge_deployment,
+                                                 0,
+                                                 cancellable, error);
+}
+
 
 GType
 ostree_sysroot_upgrader_flags_get_type (void)
